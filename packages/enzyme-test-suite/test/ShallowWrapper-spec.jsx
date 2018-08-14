@@ -2094,6 +2094,30 @@ describe('shallow', () => {
       });
     });
 
+    it('should not call componentWillReceiveProps after setState is called', () => {
+      class A extends React.Component {
+        constructor(props) {
+          super(props)
+          this.state = { a: 0 }
+        }
+
+        componentWillReceiveProps() {
+          this.setState({ a: 1 })
+        }
+
+        render() {
+          return React.createElement('div', {}, this.state.a)
+        }
+      }
+      const wrapper = shallow(<A />);
+      wrapper.setState({ a: 2 });
+      expect(wrapper.state('a')).to.eql(2);
+      wrapper.setProps({});
+      expect(wrapper.state('a')).to.eql(1);
+      wrapper.setState({ a: 3 });
+      expect(wrapper.state('a')).to.eql(3);
+    });
+
     describeIf(is('> 0.13'), 'stateless function components', () => {
       it('should throw when trying to access state', () => {
         const Foo = () => (
