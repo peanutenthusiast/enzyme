@@ -1,5 +1,5 @@
 import flat from 'array.prototype.flat';
-import compact from 'lodash/compact';
+import { compact, isEqual } from 'lodash';
 import cheerio from 'cheerio';
 
 import {
@@ -365,7 +365,7 @@ class ShallowWrapper {
               }
             }
           // If it doesn't need to rerender, update only its props.
-          } else if (JSON.stringify(props) !== JSON.stringify(instance.props)) {
+          } else if (!isEqual(props, instance.props)) {
             instance.props = (Object.freeze || Object)({ ...instance.props, ...props });
           }
           this.update();
