@@ -2095,29 +2095,60 @@ describe('shallow', () => {
     });
 
     describeIf(is('16.3.0-0'), 'should not call componentWillReceiveProps after setState is called', () => {
-      class A extends React.Component {
-        constructor(props) {
-          super(props);
-          this.state = { a: 0 };
+      it('should not call componentWillReceiveProps upon rerender', () => {
+        class A extends React.Component {
+          constructor(props) {
+            super(props);
+            this.state = { a: 0 };
+          }
+
+          componentWillReceiveProps() {
+            this.setState({ a: 1 });
+          }
+
+          render() {
+            return React.createElement('div', {}, this.state.a);
+          }
         }
 
-        componentWillReceiveProps() {
-          this.setState({ a: 1 });
+        const e = shallow(React.createElement(A), { disableLifecycleMethods: true });
+
+        e.setState({ a: 2 });
+        expect(e.state('a')).to.eql(2);
+        e.setProps({});
+        expect(e.state('a')).to.eql(1);
+        e.setState({ a: 3 });
+        expect(e.state('a')).to.eql(3);
+      });
+
+      it('should not call componentWillReceiveProps with multiple keys in props', () => {
+        class B extends React.Component {
+          constructor(props) {
+            super(props);
+            this.state = { a: 0, b: 1 };
+          }
+
+          componentWillReceiveProps() {
+            this.setState({ b: 0, a: 1 });
+          }
+
+          render() {
+            return React.createElement('div', {}, this.state.a + this.state.b);
+          }
         }
 
-        render() {
-          return React.createElement('div', {}, this.state.a);
-        }
-      }
+        const e = shallow(<B />, { disableLifecycleMethods: true});
 
-      const e = shallow(React.createElement(A), { disableLifecycleMethods: true });
-
-      e.setState({ a: 2 });
-      expect(e.state('a')).to.eql(2);
-      e.setProps({});
-      expect(e.state('a')).to.eql(1);
-      e.setState({ a: 3 });
-      expect(e.state('a')).to.eql(3);
+        e.setState({ a: 2 });
+        expect(e.state('a')).to.eql(2);
+        expect(e.state('b')).to.eql(1);
+        e.setProps({});
+        expect(e.state('a')).to.eql(1);
+        e.setState({ b: 5 });
+        e.setState({ a: 10 });
+        expect(e.state('b')).to.eql(5);
+        expect(e.state('a')).to.eql(10);
+      });
     });
 
     describeIf(is('> 0.13'), 'stateless function components', () => {
